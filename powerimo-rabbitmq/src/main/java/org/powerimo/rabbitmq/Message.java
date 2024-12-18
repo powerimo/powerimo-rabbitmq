@@ -17,12 +17,12 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MQMessage {
+public class Message {
     // common headers
     private String protocolVersion = "1.0";
     private String messageId;
     private String senderId;
-    private MQMessageType typeMessage;
+    private MessageType typeMessage;
     private String typeMessageOriginalString;
     private OffsetDateTime messageDate = OffsetDateTime.now(ZoneId.of(ZoneOffset.UTC.getId()));
     private String name;
@@ -49,7 +49,7 @@ public class MQMessage {
             return null;
         }
         String s = v.toString();
-        return MQUtils.stringToIntegerDef(s, null);
+        return RabbitUtils.stringToIntegerDef(s, null);
     }
 
     public String getParamAsString(final String name) {
@@ -72,7 +72,7 @@ public class MQMessage {
         try {
             return UUID.fromString(s);
         } catch (Throwable ex) {
-            throw new PowerimoMqException("The parameter value is not UUID: " + s);
+            throw new RabbitException("The parameter value is not UUID: " + s);
         }
     }
 
@@ -86,11 +86,11 @@ public class MQMessage {
             LocalDate date = LocalDate.parse(s, formatter);
             return date;
         } catch (Throwable ex) {
-            throw new PowerimoMqException("The parameter value is not LocalDate (yyyy-MM-dd): " + s);
+            throw new RabbitException("The parameter value is not LocalDate (yyyy-MM-dd): " + s);
         }
     }
 
-    public MQMessage addParam(String name, Object value) {
+    public Message addParam(String name, Object value) {
         params.put(name, value);
         return this;
     }

@@ -1,1 +1,1 @@
-org.powerimo.rabbitmq.starter.PowerimoMqAutoConfiguration
+org.powerimo.rabbitmq.starter.RabbitAutoConfiguration

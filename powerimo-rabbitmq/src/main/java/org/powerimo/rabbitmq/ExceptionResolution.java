@@ -1,6 +1,6 @@
 package org.powerimo.rabbitmq;
 
-public enum MQExceptionResolution {
+public enum ExceptionResolution {
     DEFAULT,
     REQUEUE,
     DLQ

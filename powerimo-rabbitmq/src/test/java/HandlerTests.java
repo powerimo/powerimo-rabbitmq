@@ -13,10 +13,10 @@ class HandlerTests {
 
     @Test
     void test1() {
-        MQMessageHandler h = new MQStandardMessageHandler();
-        h.addCommandHandler(MQMessageType.EVENT, "test1", this::handle1);
-        MQMessage message = MQMessage.builder()
-                .typeMessage(MQMessageType.EVENT)
+        RabbitMessageHandler h = new StandardRabbitMessageHandler();
+        h.addCommandHandler(MessageType.EVENT, "test1", this::handle1);
+        Message message = Message.builder()
+                .typeMessage(MessageType.EVENT)
                 .name("test1")
                 .build();
         h.handleMessage(message);
@@ -25,11 +25,11 @@ class HandlerTests {
 
     @Test
     void testInterceptor() {
-        MQMessageHandler h = new MQStandardMessageHandler();
+        RabbitMessageHandler h = new StandardRabbitMessageHandler();
         result1 = -1;
         h.setInterceptor(this::handle1);
-        MQMessage message = MQMessage.builder()
-                .typeMessage(MQMessageType.EVENT)
+        Message message = Message.builder()
+                .typeMessage(MessageType.EVENT)
                 .name("test1")
                 .build();
         h.handleMessage(message);
@@ -38,11 +38,11 @@ class HandlerTests {
 
     @Test
     void testUnknownMessage() {
-        MQMessageHandler h = new MQStandardMessageHandler();
+        RabbitMessageHandler h = new StandardRabbitMessageHandler();
         result1 = -1;
         h.setUnsupportedCommandHandler(this::handle1);
-        MQMessage message = MQMessage.builder()
-                .typeMessage(MQMessageType.EVENT)
+        Message message = Message.builder()
+                .typeMessage(MessageType.EVENT)
                 .name("test1")
                 .build();
 
@@ -50,21 +50,21 @@ class HandlerTests {
         h.handleMessage(message);
         Assertions.assertEquals(-1, result1);
 
-        message.setTypeMessage(MQMessageType.TASK);
+        message.setTypeMessage(MessageType.TASK);
         h.handleMessage(message);
         Assertions.assertEquals(2, result1);
 
         // if unsupported handler is not set, handler has to raise an exception
         h.setUnsupportedCommandHandler(null);
         result1 = -1;
-        Assertions.assertThrowsExactly(PowerimoMqException.class, () -> h.handleMessage(message));
+        Assertions.assertThrowsExactly(RabbitException.class, () -> h.handleMessage(message));
 
         // set standard handler
-        h.setUnsupportedCommandHandler(new MQStandardUnsupportedMessageHandler());
+        h.setUnsupportedCommandHandler(new StandardUnsupportedMessageHandler());
         h.handleMessage(message);
     }
 
-    private void handle1(MQMessage m) {
+    private void handle1(Message m) {
         result1 = 2;
     }
 

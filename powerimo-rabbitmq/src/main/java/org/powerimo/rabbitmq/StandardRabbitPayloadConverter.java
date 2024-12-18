@@ -7,12 +7,12 @@ import lombok.RequiredArgsConstructor;
 import java.nio.charset.StandardCharsets;
 
 @RequiredArgsConstructor
-public class StandardPayloadConverter implements MQPayloadConverter {
+public class StandardRabbitPayloadConverter implements RabbitPayloadConverter {
     private final ObjectMapper objectMapper;
 
-    public <T> T extractPayload(MQMessage message, Class<T> cls) {
+    public <T> T extractPayload(Message message, Class<T> cls) {
         if (message == null)
-            throw new PowerimoMqException("message is null");
+            throw new RabbitException("message is null");
         if (message.getPayload() == null)
             return null;
         if (cls.isInstance(message.getPayload()))
@@ -23,7 +23,7 @@ public class StandardPayloadConverter implements MQPayloadConverter {
                 return objectMapper.readValue((String) message.getPayload(), cls);
             }
         } catch (JsonProcessingException ex) {
-            throw new PowerimoMqException("Exception on converting JSON to payload class", ex);
+            throw new RabbitException("Exception on converting JSON to payload class", ex);
         }
 
         try {
@@ -33,9 +33,9 @@ public class StandardPayloadConverter implements MQPayloadConverter {
                 return objectMapper.readValue(arr, cls);
             }
         } catch (Exception e) {
-            throw new PowerimoMqException("Exception on converting JSON to payload class", e);
+            throw new RabbitException("Exception on converting JSON to payload class", e);
         }
-        throw new PowerimoMqException("Couldn't extract payload as class " + cls.getName());
+        throw new RabbitException("Couldn't extract payload as class " + cls.getName());
     }
 
     public byte[] serializePayload(Object obj) {
@@ -45,7 +45,7 @@ public class StandardPayloadConverter implements MQPayloadConverter {
             String s = objectMapper.writeValueAsString(obj);
             return s.getBytes(StandardCharsets.UTF_8);
         } catch (JsonProcessingException ex) {
-            throw new PowerimoMqException("Exception on serialization payload", ex);
+            throw new RabbitException("Exception on serialization payload", ex);
         }
     }
 }

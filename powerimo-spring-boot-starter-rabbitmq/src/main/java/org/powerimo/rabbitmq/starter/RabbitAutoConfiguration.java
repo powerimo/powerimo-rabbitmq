@@ -14,22 +14,22 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 @AutoConfiguration
-@EnableConfigurationProperties(PowerimoMqSpringParameters.class)
-@ConditionalOnProperty(value = "powerimo.mq.enabled", havingValue = "true", matchIfMissing = true)
+@EnableConfigurationProperties(RabbitParameters.class)
+@ConditionalOnProperty(value = "powerimo.rabbitmq.enabled", havingValue = "true", matchIfMissing = true)
 @Slf4j
-public class PowerimoMqAutoConfiguration {
+public class RabbitAutoConfiguration {
     public static final String CREATED = "CREATED";
     public static final String STARTED = "STARTED";
-    private final PowerimoMqSpringParameters parameters;
+    private final RabbitParameters parameters;
     private ObjectMapper objectMapper;
     private static final int LOG_LINE_LENGTH = 80;
 
-    public PowerimoMqAutoConfiguration(PowerimoMqSpringParameters mqParameters) {
+    public RabbitAutoConfiguration(RabbitParameters mqParameters) {
         this.parameters = mqParameters;
 
         if (mqParameters.getShowParametersOnStartup()) {
             log.info(Strings.repeat("=", LOG_LINE_LENGTH));
-            log.info("@   Powerimo MQ parameters");
+            log.info("@   RabbitMQ parameters");
             log.info(Strings.repeat("=", LOG_LINE_LENGTH));
             log.info(formatValue("Enabled", mqParameters.getEnabled()));
             log.info(formatValue("Application ID (senderId)", mqParameters.getAppId()));
@@ -47,32 +47,32 @@ public class PowerimoMqAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(MQListener.class)
-    public MQListener mqListener(MQParameters mqParameters, MQMessageHandler mqMessageHandler) {
-        var listener = new RabbitListener(mqParameters, mqMessageHandler);
-        log.debug(formatValue("@ bean MQListener", CREATED));
+    @ConditionalOnMissingBean(RabbitQueueListener.class)
+    public RabbitQueueListener rabbitQueueListener(org.powerimo.rabbitmq.RabbitParameters rabbitParameters, RabbitMessageHandler rabbitMessageHandler) {
+        var listener = new StandardRabbitQueueListener(rabbitParameters, rabbitMessageHandler);
+        log.debug(formatValue("@ bean RabbitQueueListener", CREATED));
         if (parameters.isAutoStart()) {
             listener.start();
-            log.debug(formatValue("@ bean MQListener start", STARTED));
+            log.debug(formatValue("@ bean RabbitQueueListener start", STARTED));
         } else {
-            log.info(formatValue("@ bean MQListener start", "DISABLED"));
+            log.info(formatValue("@ bean RabbitQueueListener start", "DISABLED"));
         }
         return listener;
     }
 
     @Bean
-    @ConditionalOnMissingBean(MQPublisher.class)
-    public MQPublisher mqPublisher(MQParameters mqParameters, MQPayloadConverter payloadConverter) {
-        var bean = new MQStandardPublisher(mqParameters, payloadConverter);
-        log.debug(formatValue("@ bean MQPublisher", CREATED));
+    @ConditionalOnMissingBean(RabbitMessagePublisher.class)
+    public RabbitMessagePublisher rabbitMessagePublisher(org.powerimo.rabbitmq.RabbitParameters rabbitParameters, RabbitPayloadConverter rabbitPayloadConverter) {
+        var bean = new StandardRabbitMessagePublisher(rabbitParameters, rabbitPayloadConverter);
+        log.debug(formatValue("@ bean RabbitMessagePublisher", CREATED));
         return bean;
     }
 
     @Bean
-    @ConditionalOnMissingBean(MQPayloadConverter.class)
-    public MQPayloadConverter mqPayloadConverter(ObjectMapper objectMapper1) {
-        var bean = new StandardPayloadConverter(objectMapper1);
-        log.debug(formatValue("@ bean MQPayloadConverter", CREATED));
+    @ConditionalOnMissingBean(RabbitPayloadConverter.class)
+    public RabbitPayloadConverter rabbitPayloadConverter(ObjectMapper objectMapper1) {
+        var bean = new StandardRabbitPayloadConverter(objectMapper1);
+        log.debug(formatValue("@ bean RabbitPayloadConverter", CREATED));
         return bean;
     }
 
@@ -90,10 +90,10 @@ public class PowerimoMqAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(MQMessageHandler.class)
-    public MQMessageHandler mqMessageHandler() {
-        var handler = new MQStandardMessageHandler();
-        log.debug(formatValue("@ bean MQMessageHandler", CREATED));
+    @ConditionalOnMissingBean(RabbitMessageHandler.class)
+    public RabbitMessageHandler rabbitMessageHandler() {
+        var handler = new StandardRabbitMessageHandler();
+        log.debug(formatValue("@ bean RabbitMessageHandler", CREATED));
         return handler;
     }
 

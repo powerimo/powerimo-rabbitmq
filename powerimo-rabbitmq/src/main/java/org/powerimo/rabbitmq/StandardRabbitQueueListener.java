@@ -10,20 +10,20 @@ import java.io.IOException;
 @Slf4j
 @Setter
 @Getter
-public class RabbitListener implements MQListener {
-    private MQMessageHandler messageHandler;
+public class StandardRabbitQueueListener implements RabbitQueueListener {
+    private RabbitMessageHandler rabbitMessageHandler;
     private Channel mqChannel;
     private ServiceStatus serviceStatus = ServiceStatus.STOPPED;
     private boolean showConnectionInfoOnStartup = true;
-    private final MQParameters mqParameters;
+    private final RabbitParameters rabbitParameters;
 
-    public RabbitListener() {
-        this.mqParameters = new MQLocalParameters();
+    public StandardRabbitQueueListener() {
+        this.rabbitParameters = new LocalParameters();
     }
 
-    public RabbitListener(MQParameters mqParameters, MQMessageHandler messageHandler) {
-        this.mqParameters = mqParameters;
-        this.messageHandler = messageHandler;
+    public StandardRabbitQueueListener(RabbitParameters rabbitParameters, RabbitMessageHandler rabbitMessageHandler) {
+        this.rabbitParameters = rabbitParameters;
+        this.rabbitMessageHandler = rabbitMessageHandler;
     }
 
     @Override
@@ -32,27 +32,27 @@ public class RabbitListener implements MQListener {
             log.debug("Service is already started");
             return;
         }
-        if (mqParameters.getQueue() == null) {
-            throw new PowerimoMqException("Queue is not specified");
+        if (rabbitParameters.getQueue() == null) {
+            throw new RabbitException("Queue is not specified");
         }
 
         showConnectionInfo();
         ConnectionFactory connectionFactory = new ConnectionFactory();
         try {
             connectionFactory.setUri(getURL());
-            if (mqParameters.getUser() != null) {
-                connectionFactory.setUsername(mqParameters.getUser());
-                connectionFactory.setPassword(mqParameters.getPassword());
+            if (rabbitParameters.getUser() != null) {
+                connectionFactory.setUsername(rabbitParameters.getUser());
+                connectionFactory.setPassword(rabbitParameters.getPassword());
             }
             Connection mqConnection = connectionFactory.newConnection();
             mqChannel = mqConnection.createChannel();
-            mqChannel.basicConsume(mqParameters.getQueue(), new MQConsumer(mqChannel, messageHandler));
+            mqChannel.basicConsume(rabbitParameters.getQueue(), new MQConsumer(mqChannel, rabbitMessageHandler));
             serviceStatus = ServiceStatus.RUNNING;
-            log.info("RabbitListener started on listening queue: {}", this.mqParameters.getQueue());
-        } catch (PowerimoMqException ex) {
+            log.info("RabbitListener started on listening queue: {}", this.rabbitParameters.getQueue());
+        } catch (RabbitException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new PowerimoMqException("RabbitListener is not started", ex);
+            throw new RabbitException("RabbitListener is not started", ex);
         }
     }
 
@@ -69,20 +69,20 @@ public class RabbitListener implements MQListener {
             }
             serviceStatus = ServiceStatus.STOPPED;
         } catch (Exception ex) {
-            throw new PowerimoMqException("RabbitListener stopping exception", ex);
+            throw new RabbitException("RabbitListener stopping exception", ex);
         }
     }
 
     private String getURL() {
-        if (mqParameters.getUrl() != null)
-            return mqParameters.getUrl();
-        if (mqParameters.getHost() == null) {
-            throw new PowerimoMqException("MQ configuration exception: both url and host are empty");
+        if (rabbitParameters.getUrl() != null)
+            return rabbitParameters.getUrl();
+        if (rabbitParameters.getHost() == null) {
+            throw new RabbitException("MQ configuration exception: both url and host are empty");
         }
         String result;
-        result = "amqp://" + mqParameters.getHost()+ ":" + mqParameters.getPort();
-        if (mqParameters.getVirtualHost() != null && !mqParameters.getVirtualHost().isEmpty()) {
-            result = result + "/" + mqParameters.getVirtualHost();
+        result = "amqp://" + rabbitParameters.getHost()+ ":" + rabbitParameters.getPort();
+        if (rabbitParameters.getVirtualHost() != null && !rabbitParameters.getVirtualHost().isEmpty()) {
+            result = result + "/" + rabbitParameters.getVirtualHost();
         }
         return result;
     }
@@ -95,31 +95,31 @@ public class RabbitListener implements MQListener {
     private void showConnectionInfo() {
         if (!showConnectionInfoOnStartup)
             return;
-        if (mqParameters.getUrl() != null)
-            log.info("RabbitMQ URL: {}; user: {}", mqParameters.getUrl(), mqParameters.getUser());
+        if (rabbitParameters.getUrl() != null)
+            log.info("RabbitMQ URL: {}; user: {}", rabbitParameters.getUrl(), rabbitParameters.getUser());
         else
             log.info("RabbitMQ host: {}, virtualHost: {}, port: {}, user: {}",
-                    mqParameters.getHost(),
-                    mqParameters.getVirtualHost(),
-                    mqParameters.getPort(),
-                    mqParameters.getUser());
-        log.info("RabbitMQ queue used: {}", mqParameters.getQueue());
+                    rabbitParameters.getHost(),
+                    rabbitParameters.getVirtualHost(),
+                    rabbitParameters.getPort(),
+                    rabbitParameters.getUser());
+        log.info("RabbitMQ queue used: {}", rabbitParameters.getQueue());
     }
 
     private static class MQConsumer extends DefaultConsumer {
         private final Channel _channel;
-        private final MQMessageHandler _handler;
-        public MQConsumer(Channel channel, MQMessageHandler messageHandler) {
+        private final RabbitMessageHandler _handler;
+        public MQConsumer(Channel channel, RabbitMessageHandler rabbitMessageHandler) {
             super(channel);
             _channel = channel;
-            _handler = messageHandler;
+            _handler = rabbitMessageHandler;
         }
 
         @Override
         public void handleDelivery(String s, Envelope envelope, AMQP.BasicProperties basicProperties, byte[] bytes) throws IOException {
-            MQMessage message;
+            Message message;
             try {
-                message = MQUtils.extractMessage(s, envelope, basicProperties, bytes);
+                message = RabbitUtils.extractMessage(s, envelope, basicProperties, bytes);
             } catch (Exception ex) {
                 _channel.basicReject(envelope.getDeliveryTag(), false);
                 log.error("[MQ] Exception on parsing message. Message was rejected. Source text=({}), Envelope=({}), basicProperties=({}), bytes[]=({})", s, envelope, basicProperties, bytes);
@@ -138,8 +138,8 @@ public class RabbitListener implements MQListener {
                 if (_handler == null) {
                     log.error("Exception on handling message. Message will be rejected and pushed to DLQ. Message={}", message, ex1);
                 } else {
-                    MQExceptionResolution resolution = _handler.handleException(message, ex1);
-                    if (resolution == MQExceptionResolution.REQUEUE) {
+                    ExceptionResolution resolution = _handler.handleException(message, ex1);
+                    if (resolution == ExceptionResolution.REQUEUE) {
                         log.error("Exception on handling message. Message will rejected with requeue. Message={}", message, ex1);
                     } else {
                         log.error("Exception on handling message. Message will be rejected and pushed to DLQ. Message={}", message, ex1);

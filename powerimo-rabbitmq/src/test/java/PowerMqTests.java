@@ -17,13 +17,13 @@ class PowerMqTests {
     void testStandardPayloadConverter() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
-        StandardPayloadConverter converter = new StandardPayloadConverter(objectMapper);
+        StandardRabbitPayloadConverter converter = new StandardRabbitPayloadConverter(objectMapper);
         SamplePayload samplePayload = new SamplePayload();
         samplePayload.setIntValue(15);
         samplePayload.setStringValue("sample");
         samplePayload.setDateTimeValue(OffsetDateTime.now());
-        MQMessage message = MQMessage.builder()
-                .typeMessage(MQMessageType.EVENT)
+        Message message = Message.builder()
+                .typeMessage(MessageType.EVENT)
                 .name("sample event")
                 .messageId("testId")
                 .result("OK")
@@ -47,27 +47,27 @@ class PowerMqTests {
     @Test
     void testStandardPayloadConverterExceptions() {
         ObjectMapper objectMapper = new ObjectMapper();
-        StandardPayloadConverter payloadConverter = new StandardPayloadConverter(objectMapper);
-        MQMessage message = new MQMessage();
+        StandardRabbitPayloadConverter payloadConverter = new StandardRabbitPayloadConverter(objectMapper);
+        Message message = new Message();
         Assertions.assertNull(payloadConverter.extractPayload(message, SamplePayload.class));
         // set wrong payload class
         message.setPayload(123);
-        Assertions.assertThrowsExactly(PowerimoMqException.class, () -> payloadConverter.extractPayload(null, SamplePayload.class));
-        Assertions.assertThrowsExactly(PowerimoMqException.class, () -> payloadConverter.extractPayload(message, SamplePayload.class));
+        Assertions.assertThrowsExactly(RabbitException.class, () -> payloadConverter.extractPayload(null, SamplePayload.class));
+        Assertions.assertThrowsExactly(RabbitException.class, () -> payloadConverter.extractPayload(message, SamplePayload.class));
     }
 
     @Test
     void testUtils1() {
-        MQMessage message = MQMessage.builder()
+        Message message = Message.builder()
                 .build();
-        Assertions.assertEquals(MQMessageType.UNKNOWN, MQUtils.getTypeMessage(message));
-        Assertions.assertEquals(MQMessageType.TASK_RESULT, MQUtils.getTypeMessage("tAsK_rEsult"));
+        Assertions.assertEquals(MessageType.UNKNOWN, RabbitUtils.getTypeMessage(message));
+        Assertions.assertEquals(MessageType.TASK_RESULT, RabbitUtils.getTypeMessage("tAsK_rEsult"));
 
-        message.setTypeMessage(MQMessageType.EVENT);
+        message.setTypeMessage(MessageType.EVENT);
     }
 
     @Test
     void testUtils2() {
-        Assertions.assertEquals(10, MQUtils.stringToIntegerDef("asda", 10));
+        Assertions.assertEquals(10, RabbitUtils.stringToIntegerDef("asda", 10));
     }
 }

@@ -1,6 +1,6 @@
 package org.powerimo.rabbitmq;
 
-public enum MQMessageType {
+public enum MessageType {
     UNKNOWN,
     TASK,
     TASK_RESULT,

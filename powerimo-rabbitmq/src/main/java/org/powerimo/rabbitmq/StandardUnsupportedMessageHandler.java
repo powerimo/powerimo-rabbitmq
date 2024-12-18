@@ -3,10 +3,10 @@ package org.powerimo.rabbitmq;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MQStandardUnsupportedMessageHandler implements MQCommandHandler {
+public class StandardUnsupportedMessageHandler implements CommandHandler {
 
     @Override
-    public void handleMessage(MQMessage message) {
+    public void handleMessage(Message message) {
         log.info("Unsupported message: {}", message);
     }
 }

@@ -1,31 +1,25 @@
-package org.powerimo.rabbitmq.starter;
+package org.powerimo.rabbitmq;
 
 import lombok.Data;
-import org.powerimo.rabbitmq.MQParameters;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "powerimo.rabbitmq")
 @Data
-public class PowerimoMqSpringParameters implements MQParameters {
-    private String url = "amqp://localhost:5672";
-    private boolean enabled = true;
-    private String host;
-    private String virtualHost;
-    private int port = 5672;
+public class LocalParameters implements RabbitParameters {
+    private boolean isEnabled = true;
+    private String url = "amqp://localhost";
     private String user;
     private String password;
-    private boolean useDefaultUnsupportedHandlers = true;
-    private String queue;
-    private boolean autoStart = true;
-    private String appId = "default-app-id";
+    private String host;
+    private String virtualHost;
+    private Integer port;
     private String exchangeTasks = "tasks";
     private String exchangeEvents = "events";
-    private String namespacePrefix;
+    private String queue;
+    private String senderId = "default-app-id";
     private boolean showParametersOnStartup = true;
 
     @Override
     public boolean getEnabled() {
-        return enabled;
+        return false;
     }
 
     @Override
@@ -75,7 +69,7 @@ public class PowerimoMqSpringParameters implements MQParameters {
 
     @Override
     public String getSenderId() {
-        return appId;
+        return senderId;
     }
 
     @Override

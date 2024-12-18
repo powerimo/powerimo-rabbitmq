@@ -1,6 +1,6 @@
 package org.powerimo.rabbitmq;
 
-public interface MQParameters {
+public interface RabbitParameters {
     boolean getEnabled();
     String getUrl();
     String getUser();

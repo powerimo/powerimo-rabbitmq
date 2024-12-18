@@ -6,27 +6,26 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.LinkedHashMap;
 
 @Slf4j
-public class MQStandardMessageHandler implements MQMessageHandler {
-    private final LinkedHashMap<String, MQCommandHandler> eventHandlers = new LinkedHashMap<>();
-    private final LinkedHashMap<String, MQCommandHandler> taskHandlers = new LinkedHashMap<>();
-    private final LinkedHashMap<String, MQCommandHandler> taskResultHandlers = new LinkedHashMap<>();
-    private MQCommandHandler unsupportedHandler;
-    private MQCommandHandler interceptor;
-    private MQCommandExceptionHandler exceptionHandler;
+public class StandardRabbitMessageHandler implements RabbitMessageHandler {
+    private final LinkedHashMap<String, CommandHandler> eventHandlers = new LinkedHashMap<>();
+    private final LinkedHashMap<String, CommandHandler> taskHandlers = new LinkedHashMap<>();
+    private final LinkedHashMap<String, CommandHandler> taskResultHandlers = new LinkedHashMap<>();
+    private CommandHandler unsupportedHandler;
+    private CommandHandler interceptor;
+    private CommandExceptionHandler exceptionHandler;
 
-    public MQStandardMessageHandler() {
+    public StandardRabbitMessageHandler() {
 
     }
 
-
     @Override
-    public void handleMessage(@NonNull MQMessage message) {
+    public void handleMessage(@NonNull Message message) {
         log.debug("[MQ->]: {}", message);
-        MQMessageType typeMQMessage = MQUtils.getTypeMessage(message);
+        MessageType typeMQMessage = RabbitUtils.getTypeMessage(message);
         if (interceptor != null) {
             interceptor.handleMessage(message);
         }
-        MQCommandHandler handler;
+        CommandHandler handler;
         switch (typeMQMessage) {
             case EVENT:
                 handler = eventHandlers.get(message.getName().toLowerCase());
@@ -65,13 +64,13 @@ public class MQStandardMessageHandler implements MQMessageHandler {
                 unsupportedHandler.handleMessage(message);
             } else {
                 var errorMessage = "Unsupported message: type=" + typeMQMessage.name() + ", name="+ message.getName();
-                throw new PowerimoMqException(errorMessage);
+                throw new RabbitException(errorMessage);
             }
         }
     }
 
     @Override
-    public void setUnsupportedCommandHandler(MQCommandHandler handler) {
+    public void setUnsupportedCommandHandler(CommandHandler handler) {
         unsupportedHandler = handler;
         if (handler == null) {
             log.debug("Handler for unsupported commands was cleared");
@@ -81,7 +80,7 @@ public class MQStandardMessageHandler implements MQMessageHandler {
     }
 
     @Override
-    public void addCommandHandler(@NonNull MQMessageType typeMessage, @NonNull String commandName, @NonNull MQCommandHandler commandHandler) {
+    public void addCommandHandler(@NonNull MessageType typeMessage, @NonNull String commandName, @NonNull CommandHandler commandHandler) {
         switch (typeMessage) {
             case EVENT:
                 eventHandlers.putIfAbsent(commandName.toLowerCase(), commandHandler);
@@ -93,26 +92,26 @@ public class MQStandardMessageHandler implements MQMessageHandler {
                 taskResultHandlers.putIfAbsent(commandName.toLowerCase(), commandHandler);
                 break;
             default:
-                throw new PowerimoMqException("Type is not supported for registering command handlers: " + typeMessage.name());
+                throw new RabbitException("Type is not supported for registering command handlers: " + typeMessage.name());
         }
     }
 
     @Override
-    public void setInterceptor(MQCommandHandler handler) {
+    public void setInterceptor(CommandHandler handler) {
         interceptor = handler;
     }
 
     @Override
-    public void setExceptionHandler(MQCommandExceptionHandler handler) {
+    public void setExceptionHandler(CommandExceptionHandler handler) {
         exceptionHandler = handler;
     }
 
     @Override
-    public MQExceptionResolution handleException(MQMessage message, Throwable ex) {
+    public ExceptionResolution handleException(Message message, Throwable ex) {
         if (exceptionHandler != null) {
             return exceptionHandler.handleException(message, ex);
         } else {
-            return MQExceptionResolution.DEFAULT;
+            return ExceptionResolution.DEFAULT;
         }
     }
 }
