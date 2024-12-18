@@ -1,27 +1,27 @@
 {
   "properties": [
     {
-      "name": "powerimo.mq.url",
+      "name": "powerimo.rabbitmq.url",
       "type": "java.lang.String",
       "description": "URL of RabbitMQ instance. Default: empty."
     },
     {
-      "name": "powerimo.mq.enabled",
+      "name": "powerimo.rabbitmq.enabled",
       "type": "java.lang.Boolean",
       "description": "Flag for enabling\\disabling MQ interaction. Default: true."
     },
     {
-      "name": "powerimo.mq.queue",
+      "name": "powerimo.rabbitmq.queue",
       "type": "java.lang.String",
       "description": "The name of Queue in MQ instance to connect. No default value."
     },
     {
-      "name": "powerimo.mq.exchange-task",
+      "name": "powerimo.rabbitmq.exchange-task",
       "type": "java.lang.String",
       "description": "RabbitMQ Tasks exchange name. Default value: tasks."
     },
     {
-      "name": "powerimo.mq.exchange-events",
+      "name": "powerimo.rabbitmq.exchange-events",
       "type": "java.lang.String",
       "description": "RabbitMQ Events exchange name. Default value: events."
     },
