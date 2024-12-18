@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.powerimo</groupId>
+    <artifactId>powerimo-rabbitmq-pom</artifactId>
+    <packaging>pom</packaging>
+    <version>${revision}</version>
+    <description>Powerimo RabbitMQ Parent module</description>
+    <modules>
+        <module>powerimo-rabbitmq</module>
+        <module>powerimo-spring-boot-starter-rabbitmq</module>
+    </modules>
+
+    <properties>
+        <revision>3.0-SNAPSHOT</revision>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lombok.version>1.18.26</lombok.version>
+        <databind.version>2.14.2</databind.version>
+        <springboot.version>3.4.0</springboot.version>
+        <powerimo.common.version>1.1.0</powerimo.common.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${databind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${databind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${databind.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>
